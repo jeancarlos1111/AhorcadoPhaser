@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ahorcado-v3';
+const CACHE_NAME = 'ahorcado-v4';
 const ASSETS = [
   './',
   './index.html',
