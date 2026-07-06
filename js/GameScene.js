@@ -379,7 +379,7 @@ export default class GameScene extends Phaser.Scene {
 
     // --- DEBUG TEXT FOR MOBILE TESTING ---
     if (this.debugTxt) this.debugTxt.destroy();
-    this.debugTxt = this.add.text(5, H - 15, `v5 | W:${Math.round(W)} H:${Math.round(H)} D:${DPR} S:${scale ? scale.toFixed(2) : 1}`, {
+    this.debugTxt = this.add.text(5, H - 15, `v6 | W:${Math.round(W)} H:${Math.round(H)} D:${DPR} S:${this.kbContainer.scaleX.toFixed(2)}`, {
       fontSize: '14px', color: '#FFF', stroke: '#000', strokeThickness: 2, fontFamily: 'Arial'
     }).setDepth(100);
   }
