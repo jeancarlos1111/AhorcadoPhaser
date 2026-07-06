@@ -290,8 +290,11 @@ export default class GameScene extends Phaser.Scene {
     this.topGfx.fillStyle(0xE0E0E0, 1);
     this.topGfx.fillRect(0, 56, W, 1);
 
+    const topScale = Math.min(1, W / 420);
+    this.topTitle.setScale(topScale);
     this.topTitle.setPosition(W / 2, 28);
     this.langBtn.setPosition(14, 28);
+    this.langBtn.setScale(topScale);
     // Draw pill background for langBtn
     const lbw = this.langBtn.width + 18, lbh = 26;
     this.langBtnBg.clear();
@@ -299,9 +302,10 @@ export default class GameScene extends Phaser.Scene {
     this.langBtnBg.fillRoundedRect(7, 28 - lbh / 2, lbw, lbh, 13);
     this.langBtnBg.lineStyle(1.5, 0x90CAF9, 1);
     this.langBtnBg.strokeRoundedRect(7, 28 - lbh / 2, lbw, lbh, 13);
-    this.hearts.forEach((h, i) =>
-      h.setPosition(W - 16 - (this.MAX_ATTEMPTS - 1 - i) * 22, 28)
-    );
+    this.hearts.forEach((h, i) => {
+      h.setScale(topScale);
+      h.setPosition(W - 12 - (this.MAX_ATTEMPTS - 1 - i) * (22 * topScale), 28);
+    });
 
     const isLand = W > H && W > 600;
     let gx, gy, ix, iy, wx, wy, kx, ky, bx, by, kbW;
@@ -331,6 +335,11 @@ export default class GameScene extends Phaser.Scene {
       const availH = H - 60;
       let scale = 1;
       if (availH < totalNatH) scale = Math.max(0.4, availH / totalNatH);
+      
+      // Ensure elements don't get squished horizontally on narrow mobile screens (e.g. 320px)
+      if (W < 420) {
+        scale = Math.min(scale, W / 420);
+      }
 
       this.gallowsContainer.setScale(scale);
       this.infoContainer.setScale(scale);
