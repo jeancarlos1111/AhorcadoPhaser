@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="description" content="Juego Ahorcado responsivo (Móvil y Escritorio) con tema Venezolanario.">
+  <meta name="theme-color" content="#5BB8F5">
+  <link rel="manifest" href="./manifest.json">
   <title>Ahorcado – Phaser 3</title>
 
   <!-- Google Fonts -->
@@ -41,5 +43,17 @@
   <!-- Phaser 3 desde CDN -->
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
   <script type="module" src="js/main.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(registration => {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          }, err => {
+            console.log('ServiceWorker registration failed: ', err);
+          });
+      });
+    }
+  </script>
 </body>
 </html>
