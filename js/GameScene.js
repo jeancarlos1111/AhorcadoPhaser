@@ -376,6 +376,12 @@ export default class GameScene extends Phaser.Scene {
       this.overlayContainer.setPosition(W / 2, H / 2);
       this._drawOverlayBg(W, H);
     }
+
+    // --- DEBUG TEXT FOR MOBILE TESTING ---
+    if (this.debugTxt) this.debugTxt.destroy();
+    this.debugTxt = this.add.text(5, H - 15, `v5 | W:${Math.round(W)} H:${Math.round(H)} D:${DPR} S:${scale ? scale.toFixed(2) : 1}`, {
+      fontSize: '14px', color: '#FFF', stroke: '#000', strokeThickness: 2, fontFamily: 'Arial'
+    }).setDepth(100);
   }
 
   // ── WORD BOXES ───────────────────────────────────────────────
