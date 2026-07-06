@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="Juego Ahorcado responsivo (Móvil y Escritorio) con tema Venezolanario.">
+  <title>Ahorcado – Phaser 3</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #fdf5e6; /* Fallback */
+      min-height: 100vh;
+      margin: 0;
+      overflow: hidden; /* No scrollbars ever */
+      font-family: 'Exo 2', Arial, sans-serif;
+      touch-action: none; /* Previene swipe to refresh en móvil */
+    }
+
+    #game-container {
+      width: 100vw;
+      height: 100vh;
+      display: block;
+    }
+
+    #game-container canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container"></div>
+  <!-- Phaser 3 desde CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
