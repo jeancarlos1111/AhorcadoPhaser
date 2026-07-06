@@ -6,7 +6,8 @@ new Phaser.Game({
   scale: {
     mode: Phaser.Scale.RESIZE,
     width: '100%',
-    height: '100%'
+    height: '100%',
+    zoom: 1 / (window.devicePixelRatio || 1)
   },
   backgroundColor: '#5BB8F5',
   resolution: window.devicePixelRatio || 1,
