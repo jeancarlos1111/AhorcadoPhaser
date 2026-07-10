@@ -1,4 +1,4 @@
-import { drawSceneBackground } from './constants.js';
+import { drawSceneBackground, drawGlassPanel, C_TEXT, C_PRIMARY } from './constants.js';
 
 export default class LanguageScene extends Phaser.Scene {
   constructor() { super({ key: 'LanguageScene' }); }
@@ -6,28 +6,25 @@ export default class LanguageScene extends Phaser.Scene {
   create() {
     this.bg = this.add.graphics();
 
-    // Title — white text with dark blue outline for sky background
+    // Title — dark text with neumorphic style
     this.titleShadow = this.add.text(0, 0, 'AHORCADO', {
       fontSize: '48px', fontFamily: '"Orbitron", monospace',
-      color: 'rgba(0,0,40,0.25)', fontStyle: 'bold',
+      color: '#FFFFFF', fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.title = this.add.text(0, 0, 'AHORCADO', {
       fontSize: '48px', fontFamily: '"Orbitron", monospace',
-      color: '#FFFFFF', fontStyle: 'bold',
-      stroke: '#1A237E', strokeThickness: 8,
+      color: '#4A5568', fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.subtitle = this.add.text(0, 0,
       'Elige tu idioma  ·  Choose language  ·  Escolha o idioma', {
       fontSize: '14px', fontFamily: '"Exo 2", Arial',
       color: '#FFFFFF', align: 'center',
-      stroke: '#1A237E', strokeThickness: 4,
     }).setOrigin(0.5);
 
-    this.version = this.add.text(0, 0, 'v3.0 Fluid Design', {
-      fontSize: '11px', fontFamily: 'Arial', color: '#FFFFFF',
-      stroke: '#1A237E', strokeThickness: 3,
+    this.version = this.add.text(0, 0, 'v4.0 Premium Light', {
+      fontSize: '11px', fontFamily: 'Arial', color: '#E2E8F0',
     }).setOrigin(0.5);
 
     // Language buttons
@@ -43,7 +40,7 @@ export default class LanguageScene extends Phaser.Scene {
       const f = this.add.text(0, 0, lang.flag, { fontSize: '32px' }).setOrigin(0.5);
       const n = this.add.text(0, 0, lang.name, {
         fontSize: '22px', fontFamily: '"Exo 2", Arial',
-        color: '#1A237E', fontStyle: 'bold',
+        color: '#1E293B', fontStyle: 'bold',
       }).setOrigin(0.5);
       const z = this.add.rectangle(0, 0, 260, 72).setInteractive({ cursor: 'pointer' });
 
@@ -57,7 +54,7 @@ export default class LanguageScene extends Phaser.Scene {
       });
       z.on('pointerdown', () => {
         this.registry.set('language', lang.key);
-        this.cameras.main.fadeOut(300, 91, 184, 245);
+        this.cameras.main.fadeOut(300, 79, 172, 254);
         this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('GameScene'));
       });
 
@@ -68,42 +65,26 @@ export default class LanguageScene extends Phaser.Scene {
     this.scale.on('resize', this.resize, this);
     this.resize(this.scale.gameSize);
 
-    this.cameras.main.fadeIn(400, 91, 184, 245);
+    this.cameras.main.fadeIn(400, 79, 172, 254);
   }
 
   _paintLangBtn(g, x, y, w, h, hover) {
-    g.clear();
     const cx = x - w / 2, cy = y - h / 2;
-    const r  = h * 0.38;
-
-    // Soft drop shadow
-    g.fillStyle(0x000000, 0.13);
-    g.fillRoundedRect(cx + 2, cy + 5, w, h, r);
-
-    // Button face
-    g.fillStyle(hover ? 0xE8F5E9 : 0xFFFFFF, 1);
-    g.fillRoundedRect(cx, cy, w, h, r);
-
-    // Top shine (solid color with limited radius prevents WebGL triangulation artifacts)
-    g.fillStyle(0xFFFFFF, hover ? 0.3 : 0.6);
-    g.fillRoundedRect(cx + 3, cy + 3, w - 6, h * 0.4, h * 0.2);
-    // Border (green on hover, light grey normal)
-    g.lineStyle(hover ? 2.5 : 1.5, hover ? 0x4CAF50 : 0xDDDDDD, 1);
-    g.strokeRoundedRect(cx, cy, w, h, r);
+    drawGlassPanel(g, cx, cy, w, h, 16, hover ? 1 : 0.85);
   }
 
   resize(gameSize) {
     const W = gameSize.width, H = gameSize.height;
     const cx = W / 2, cy = H / 2;
 
-    // Draw the shared illustrated background
+    // Draw the shared neumorphic background
     drawSceneBackground(this.bg, W, H);
 
     const isLand = W > H;
     const titleY = isLand ? Math.max(55, cy - 185) : Math.max(82, cy - 240);
 
     this.tweens.killTweensOf(this.title);
-    this.titleShadow.setPosition(cx + 4, titleY + 4);
+    this.titleShadow.setPosition(cx - 2, titleY - 2); // Neumorphic light highlight effect
     this.title.setPosition(cx, titleY);
     this.tweens.add({
       targets: this.title,

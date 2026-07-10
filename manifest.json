@@ -4,8 +4,8 @@
   "description": "Juego del Ahorcado con diseño fluido",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#5BB8F5",
-  "theme_color": "#5BB8F5",
+  "background_color": "#4FACFE",
+  "theme_color": "#4FACFE",
   "orientation": "portrait-primary",
   "icons": [
     {

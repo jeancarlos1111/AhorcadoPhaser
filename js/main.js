@@ -10,7 +10,7 @@ window.game = new Phaser.Game({
     width: window.innerWidth,
     height: window.innerHeight
   },
-  backgroundColor: '#5BB8F5',
+  backgroundColor: '#4FACFE',
   resolution: DPR,
   parent: 'game-container',
   scene: [LanguageScene, GameScene],

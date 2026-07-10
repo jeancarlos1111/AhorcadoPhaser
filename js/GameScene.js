@@ -1,4 +1,4 @@
-import { ALL_WORD_BANKS, drawSceneBackground } from './constants.js';
+import { ALL_WORD_BANKS, drawSceneBackground, drawGlassPanel, C_TEXT, C_PRIMARY, C_SUCCESS, C_DANGER } from './constants.js';
 
 export default class GameScene extends Phaser.Scene {
   constructor() { super({ key: 'GameScene' }); }
@@ -9,6 +9,11 @@ export default class GameScene extends Phaser.Scene {
     this.langData    = ALL_WORD_BANKS[langKey];
     this.ui          = this.langData.ui;
 
+    // Scores and Turn
+    this.playerScore = this.registry.get('playerScore') || 0;
+    this.aiScore     = this.registry.get('aiScore') || 0;
+    this.isPlayerTurn = true;
+
     this.initAudio();
     this._chooseWord();
 
@@ -16,10 +21,15 @@ export default class GameScene extends Phaser.Scene {
     this.bgGfx  = this.add.graphics();
     this.topGfx = this.add.graphics();
 
-    // Top bar — dark text for white card background
+    // Top bar — dark text for glass background
     this.topTitle = this.add.text(0, 0, 'AHORCADO', {
       fontSize: '20px', fontFamily: '"Orbitron", monospace',
-      color: '#1A237E', fontStyle: 'bold',
+      color: '#1E293B', fontStyle: 'bold',
+    }).setOrigin(0.5);
+
+    this.scoreTxt = this.add.text(0, 0, `Puntos: ${this.playerScore} | IA: ${this.aiScore}`, {
+      fontSize: '14px', fontFamily: '"Exo 2", Arial',
+      color: '#1E293B', fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.langBtnBg = this.add.graphics(); // Pill bg drawn in resize()
@@ -62,7 +72,9 @@ export default class GameScene extends Phaser.Scene {
     this._setupKeyInput();
     this._updateHearts();
 
-    this.cameras.main.fadeIn(400, 91, 184, 245);
+    this.hintTxt.setText('¡Tu Turno!');
+
+    this.cameras.main.fadeIn(400, 79, 172, 254);
   }
 
   // ── AUDIO ────────────────────────────────────────────────────
@@ -109,6 +121,10 @@ export default class GameScene extends Phaser.Scene {
   }
 
   // ── GALLOWS ──────────────────────────────────────────────────
+  /**
+   * Crea los objetos gráficos para la horca y el muñeco ahorcado.
+   * Prepara los gráficos base y las partes del cuerpo (cabeza, torso, extremidades).
+   */
   _createGallowsObjects() {
     this.gCatTxt = this.add.text(80, -22, `📂 ${this.category}`, {
       fontSize: '12px', fontFamily: '"Exo 2", Arial',
@@ -131,8 +147,8 @@ export default class GameScene extends Phaser.Scene {
   _drawGallowsBase() {
     const g = this.gBaseGfx; g.clear();
     const ox = 0, oy = 0;
-    // Lighter, more cartoon-like wood palette
-    const WD = 0xA0714F, WL = 0xC89060, WH = 0xDEAA78;
+    // Sleek vector modern style
+    const WD = 0x1E293B, WL = 0x334155, WH = 0x475569;
     g.fillStyle(WD); g.fillRect(ox, oy+249, 150, 12);
     g.fillStyle(WL); g.fillRect(ox, oy+242, 150, 9);
     g.fillStyle(WH); g.fillRect(ox, oy+239, 150, 5);            // Base
@@ -144,8 +160,8 @@ export default class GameScene extends Phaser.Scene {
     g.fillStyle(WH); g.fillRect(ox+38, oy-2, 126, 4);           // Beam
     g.lineStyle(7, WD, 1); g.lineBetween(ox+52, oy+44, ox+82, oy);
     g.lineStyle(5, WL, 1); g.lineBetween(ox+49, oy+41, ox+79, oy-2); // Brace
-    g.lineStyle(3, 0xCCCCCC, 1); g.lineBetween(ox+160, oy, ox+160, oy+45);
-    g.fillStyle(0xBBBBBB); g.fillCircle(ox+160, oy+46, 4);     // Rope
+    g.lineStyle(3, 0x94A3B8, 1); g.lineBetween(ox+160, oy, ox+160, oy+45);
+    g.fillStyle(0x64748B); g.fillCircle(ox+160, oy+46, 4);     // Rope
   }
 
   _drawPart(name) {
@@ -183,27 +199,32 @@ export default class GameScene extends Phaser.Scene {
   }
 
   // ── CREATE OBJECTS ───────────────────────────────────────────
+  /**
+   * Crea el panel de información que muestra el estado actual de la partida:
+   * número de intentos restantes, letras falladas y texto de pista.
+   */
   _createInfoObjects() {
-    // White card panel drawn once (position is container-relative)
+    // Glass panel
     this.infoPanelGfx = this.add.graphics();
-    this.infoPanelGfx.fillStyle(0x000000, 0.07);
-    this.infoPanelGfx.fillRoundedRect(-157, -25, 314, 86, 12);
-    this.infoPanelGfx.fillStyle(0xFFFFFF, 0.93);
-    this.infoPanelGfx.fillRoundedRect(-155, -27, 310, 86, 12);
+    drawGlassPanel(this.infoPanelGfx, -155, -27, 310, 86, 16, 0.85);
 
     this.statusTxt = this.add.text(0, 0, `${this.ui.attempts}: 0 / ${this.MAX_ATTEMPTS}`, {
-      fontSize: '14px', fontFamily: 'Arial', color: '#1A237E', fontStyle: 'bold',
+      fontSize: '14px', fontFamily: 'Arial', color: '#1E293B', fontStyle: 'bold',
     }).setOrigin(0.5);
     this.wrongTxt = this.add.text(0, 22, `${this.ui.wrongLetters} —`, {
-      fontSize: '13px', fontFamily: '"Orbitron", monospace', color: '#E53935', fontStyle: 'bold',
+      fontSize: '13px', fontFamily: '"Orbitron", monospace', color: '#F56565', fontStyle: 'bold',
     }).setOrigin(0.5);
     this.hintTxt = this.add.text(0, 44, '', {
-      fontSize: '12px', fontFamily: 'Arial', color: '#F57C00',
+      fontSize: '14px', fontFamily: '"Exo 2", Arial', color: '#667EEA', fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.infoContainer.add([this.infoPanelGfx, this.statusTxt, this.wrongTxt, this.hintTxt]);
   }
 
+  /**
+   * Genera las casillas vacías (cajas y textos) que representan las letras
+   * ocultas de la palabra secreta, además del contador de longitud.
+   */
   _createWordObjects() {
     this.boxes = [];
     for (let i = 0; i < this.secret.length; i++) {
@@ -223,6 +244,10 @@ export default class GameScene extends Phaser.Scene {
     this.wordContainer.add(this.wordLenTxt);
   }
 
+  /**
+   * Construye el teclado virtual interactivo (QWERTY) en la parte inferior.
+   * Crea eventos de hover y clic para cada letra.
+   */
   _createKeyboardObjects() {
     // White card panel behind all keys (added first = rendered behind)
     this.kbBgGfx = this.add.graphics();
@@ -233,13 +258,14 @@ export default class GameScene extends Phaser.Scene {
     rows.forEach(row => {
       row.split('').forEach(l => {
         const bg  = this.add.graphics();
+        // Aumentamos el tamaño base y escalamos a la mitad para mayor nitidez en móviles
         const txt = this.add.text(0, 0, l, {
-          fontSize: '15px', fontFamily: '"Exo 2", Arial',
+          fontSize: '30px', fontFamily: '"Exo 2", Arial',
           color: '#1A237E', fontStyle: 'bold',
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setScale(0.5);
         const z = this.add.rectangle(0, 0, 10, 10).setInteractive({ cursor: 'pointer' });
-        z.on('pointerover',  () => { if (!this.keys[l].used) { this._paintKey(l,'hover');  this.tweens.add({ targets:txt, scale:1.12, duration:80 }); } });
-        z.on('pointerout',   () => { if (!this.keys[l].used) { this._paintKey(l,'normal'); this.tweens.add({ targets:txt, scale:1,    duration:80 }); } });
+        z.on('pointerover',  () => { if (!this.keys[l].used) { this._paintKey(l,'hover');  this.tweens.add({ targets:txt, scale:0.56, duration:80 }); } });
+        z.on('pointerout',   () => { if (!this.keys[l].used) { this._paintKey(l,'normal'); this.tweens.add({ targets:txt, scale:0.5,    duration:80 }); } });
         z.on('pointerdown',  () => { if (!this.gameOver && !this.keys[l].used) { this.playSound('click'); this._processLetter(l); } });
         this.kbContainer.add([bg, txt, z]);
         this.keys[l] = { bg, txt, z, used: false, state: 'normal' };
@@ -247,6 +273,11 @@ export default class GameScene extends Phaser.Scene {
     });
   }
 
+  /**
+   * Crea y configura los botones de acción principales del juego:
+   * - Botón de Pista (Hint) para revelar una letra
+   * - Botón de Jugar de Nuevo (Restart)
+   */
   _createButtonObjects() {
     this.hHover = false;
     this.rHover = false;
@@ -281,18 +312,15 @@ export default class GameScene extends Phaser.Scene {
     // Illustrated cartoon background
     drawSceneBackground(this.bgGfx, W, H);
 
-    // White floating card — top bar
+    // Glass floating card — top bar
     this.topGfx.clear();
-    this.topGfx.fillStyle(0x000000, 0.07);
-    this.topGfx.fillRect(0, 4, W, 56);
-    this.topGfx.fillStyle(0xFFFFFF, 1);
-    this.topGfx.fillRect(0, 0, W, 57);
-    this.topGfx.fillStyle(0xE0E0E0, 1);
-    this.topGfx.fillRect(0, 56, W, 1);
+    drawGlassPanel(this.topGfx, 0, 0, W, 57, 0, 0.85);
 
     const topScale = Math.min(1, W / 420);
     this.topTitle.setScale(topScale);
-    this.topTitle.setPosition(W / 2, 28);
+    this.topTitle.setPosition(W / 2, 16);
+    this.scoreTxt.setScale(topScale);
+    this.scoreTxt.setPosition(W / 2, 40);
     this.langBtn.setPosition(14, 28);
     this.langBtn.setScale(topScale);
     // Draw pill background for langBtn
@@ -405,23 +433,12 @@ export default class GameScene extends Phaser.Scene {
   _drawBox(b) {
     b.bg.clear();
     const r = 10;
+    const pressed = b.isErr || b.isRev;
+    drawGlassPanel(b.bg, b.x, b.y, b.w, b.h, r, 0.9);
     if (b.isErr) {
-      // Error box: pink / red
-      b.bg.fillStyle(0x000000, 0.10); b.bg.fillRoundedRect(b.x+2, b.y+4, b.w, b.h, r);
-      b.bg.fillStyle(0xFFCDD2, 1);    b.bg.fillRoundedRect(b.x,   b.y,   b.w, b.h, r);
-      b.bg.lineStyle(2, 0xEF5350, 1); b.bg.strokeRoundedRect(b.x, b.y,   b.w, b.h, r);
+      b.bg.fillStyle(0xEF4444, 0.3); b.bg.fillRoundedRect(b.x, b.y, b.w, b.h, r);
     } else if (b.isRev) {
-      // Revealed correct: dark navy
-      b.bg.fillStyle(0x000000, 0.18); b.bg.fillRoundedRect(b.x+2, b.y+4, b.w, b.h, r);
-      b.bg.fillStyle(0x1A237E, 1);    b.bg.fillRoundedRect(b.x,   b.y,   b.w, b.h, r);
-      // Top shine
-      b.bg.fillStyle(0xFFFFFF, 0.12);
-      b.bg.fillRoundedRect(b.x+3, b.y+3, b.w-6, b.h*0.4, b.h*0.2);
-    } else {
-      // Normal: light sky-blue tint with matching border (game-like)
-      b.bg.fillStyle(0x000000, 0.10); b.bg.fillRoundedRect(b.x+2, b.y+4, b.w, b.h, r);
-      b.bg.fillStyle(0xECF4FF, 1);    b.bg.fillRoundedRect(b.x,   b.y,   b.w, b.h, r);
-      b.bg.lineStyle(2, 0x90CAF9, 1); b.bg.strokeRoundedRect(b.x, b.y,   b.w, b.h, r);
+      b.bg.fillStyle(0x10B981, 0.3); b.bg.fillRoundedRect(b.x, b.y, b.w, b.h, r);
     }
   }
 
@@ -433,51 +450,41 @@ export default class GameScene extends Phaser.Scene {
 
     rows.forEach((row, ri) => {
       const rowW = row.length * (kw + kgap) - kgap;
-      const sx = -rowW / 2;
-      const ky = ri * (kh + kgap);
+      const sx = Math.floor(-rowW / 2);
+      const ky = Math.floor(ri * (kh + kgap));
       row.split('').forEach((l, ci) => {
         const k = this.keys[l];
-        k.x = sx + ci*(kw+kgap); k.y = ky; k.w = kw; k.h = kh;
+        k.x = Math.floor(sx + ci*(kw+kgap)); k.y = ky; k.w = kw; k.h = kh;
         k.z.setPosition(k.x + kw/2, k.y + kh/2);
         k.z.setSize(kw, kh);
-        k.txt.setPosition(k.x + kw/2, k.y + kh/2);
+        // Forzar posiciones enteras evita el "sub-pixel rendering" que causa borrosidad
+        k.txt.setPosition(Math.floor(k.x + kw/2), Math.floor(k.y + kh/2));
         this._paintKey(l, k.state);
       });
     });
 
-    // White card panel behind all keys
+    // Glass panel behind all keys
     const numRows = rows.length;
     const panelW  = availW + 18;
     const panelH  = numRows * (kh + kgap) - kgap + 30;
     this.kbBgGfx.clear();
-    this.kbBgGfx.fillStyle(0x000000, 0.07);
-    this.kbBgGfx.fillRoundedRect(-panelW / 2 - 2, -16, panelW + 4, panelH + 4, 20);
-    this.kbBgGfx.fillStyle(0xFFFFFF, 0.97);
-    this.kbBgGfx.fillRoundedRect(-panelW / 2, -14, panelW, panelH, 18);
+    drawGlassPanel(this.kbBgGfx, -panelW / 2, -14, panelW, panelH, 18, 0.85);
   }
 
   _paintKey(l, state) {
     const k = this.keys[l]; k.state = state;
     const g = k.bg; g.clear();
-    const S = {
-      normal:  { f:0xFFFFFF, sh:0xBBBBBB, tc:'#1A237E', bd:0xE0E0E0 },
-      hover:   { f:0xF0F4FF, sh:0xAAAAAA, tc:'#1A237E', bd:0xC5CAE9 },
-      correct: { f:0x4CAF50, sh:0x2E7D32, tc:'#FFFFFF', bd:0x388E3C },
-      wrong:   { f:0xEF5350, sh:0xB71C1C, tc:'#FFFFFF', bd:0xE53935 },
-      hint:    { f:0xFFA726, sh:0xE65100, tc:'#FFFFFF', bd:0xFB8C00 },
-    };
-    const s = S[state] || S.normal;
-    const r = k.h * 0.42; // pill-like rounding
-    // Shadow (pronounced bottom)
-    g.fillStyle(s.sh, 1); g.fillRoundedRect(k.x, k.y+3, k.w, k.h, r);
-    // Main fill
-    g.fillStyle(s.f, 1);  g.fillRoundedRect(k.x, k.y,   k.w, k.h, r);
-    // Top shine for normal/hover
-    if (state === 'normal' || state === 'hover') {
-      g.fillStyle(0xFFFFFF, 0.5);
-      g.fillRoundedRect(k.x+2, k.y+2, k.w-4, k.h*0.4, k.h*0.2);
-    }
-    k.txt.setColor(s.tc);
+    const r = k.h * 0.42;
+    
+    // Using slightly higher opacity for hovered/pressed keys
+    const alpha = (state === 'hover' || state === 'correct' || state === 'wrong') ? 1 : 0.85;
+    drawGlassPanel(g, k.x, k.y, k.w, k.h, r, alpha);
+    
+    let tc = '#1E293B';
+    if (state === 'correct') { tc = '#FFFFFF'; g.fillStyle(0x10B981, 0.9); g.fillRoundedRect(k.x, k.y, k.w, k.h, r); }
+    if (state === 'wrong') { tc = '#FFFFFF'; g.fillStyle(0xEF4444, 0.9); g.fillRoundedRect(k.x, k.y, k.w, k.h, r); }
+    if (state === 'hint') { tc = '#FFFFFF'; g.fillStyle(0x3B82F6, 0.9); g.fillRoundedRect(k.x, k.y, k.w, k.h, r); }
+    k.txt.setColor(tc);
   }
 
   // ── BUTTONS ──────────────────────────────────────────────────
@@ -506,17 +513,23 @@ export default class GameScene extends Phaser.Scene {
   _paintBtn(g, x, y, w, h, fillColor, shadowColor) {
     g.clear();
     const r = h * 0.42;
-    // Pronounced bottom shadow
-    g.fillStyle(shadowColor, 1); g.fillRoundedRect(x, y+5, w, h, r);
-    // Main button face
-    g.fillStyle(fillColor, 1);   g.fillRoundedRect(x, y, w, h, r);
-    // Top shine highlight
-    g.fillStyle(0xFFFFFF, 0.22);
-    g.fillRoundedRect(x+3, y+3, w-6, h*0.4, h*0.2);
+    const hover = fillColor === 0x66BB6A || fillColor === 0xEF5350;
+    
+    // Draw solid color button for actions (not glass)
+    g.fillStyle(shadowColor, 1); g.fillRoundedRect(x, y+4, w, h, r);
+    g.fillStyle(fillColor, 1); g.fillRoundedRect(x, y, w, h, r);
+    if (hover) {
+      g.fillStyle(0xFFFFFF, 0.2); g.fillRoundedRect(x, y, w, h, r);
+    }
   }
 
   // ── GAME LOGIC ───────────────────────────────────────────────
   _processLetter(letter) {
+    if (this.gameOver || !this.isPlayerTurn) return;
+    this._handleGuess(letter, true);
+  }
+
+  _handleGuess(letter, isPlayer) {
     if (this.gameOver) return;
     if (this.revealed.includes(letter) || this.wrong.includes(letter)) return;
     const key = this.keys[letter];
@@ -525,14 +538,31 @@ export default class GameScene extends Phaser.Scene {
 
     if (this.secret.includes(letter)) {
       this.playSound('correct');
+      if (isPlayer) this.playerScore += 10; else this.aiScore += 10;
+      this._updateScoreTxt();
+
       const indices = [];
       for (let i = 0; i < this.secret.length; i++)
         if (this.secret[i] === letter) { this.revealed[i] = letter; indices.push(i); }
       this._paintKey(letter, 'correct');
       indices.forEach((idx, d) => this.time.delayedCall(d * 90, () => this._revealBox(idx)));
-      if (!this.revealed.includes('_')) this.time.delayedCall(700, () => this._endGame(true));
+      
+      if (!this.revealed.includes('_')) {
+        if (isPlayer) this.playerScore += 50; else this.aiScore += 50;
+        this._updateScoreTxt();
+        this.registry.set('playerScore', this.playerScore);
+        this.registry.set('aiScore', this.aiScore);
+        this.time.delayedCall(700, () => this._endGame(true));
+      } else {
+        if (isPlayer) this._passTurnToAI();
+        else { this.isPlayerTurn = true; this.hintTxt.setText('¡Tu Turno!'); }
+      }
     } else {
       this.playSound('wrong');
+      if (isPlayer) this.playerScore = Math.max(0, this.playerScore - 5);
+      else this.aiScore = Math.max(0, this.aiScore - 5);
+      this._updateScoreTxt();
+
       this.wrong.push(letter); this.attempts++;
       this._paintKey(letter, 'wrong');
       this.statusTxt.setText(`${this.ui.attempts}: ${this.attempts} / ${this.MAX_ATTEMPTS}`);
@@ -540,7 +570,42 @@ export default class GameScene extends Phaser.Scene {
       this._updateHearts();
       this._showNextBodyPart();
       this.cameras.main.shake(150, 0.005);
-      if (this.attempts >= this.MAX_ATTEMPTS) this.time.delayedCall(820, () => this._endGame(false));
+      
+      if (this.attempts >= this.MAX_ATTEMPTS) {
+        this.registry.set('playerScore', this.playerScore);
+        this.registry.set('aiScore', this.aiScore);
+        this.time.delayedCall(820, () => this._endGame(false));
+      } else {
+        if (isPlayer) this._passTurnToAI();
+        else { this.isPlayerTurn = true; this.hintTxt.setText('¡Tu Turno!'); }
+      }
+    }
+  }
+
+  _updateScoreTxt() {
+    if(this.scoreTxt) this.scoreTxt.setText(`Puntos: ${this.playerScore} | IA: ${this.aiScore}`);
+  }
+
+  _passTurnToAI() {
+    this.isPlayerTurn = false;
+    this.hintTxt.setText('Turno de la IA...');
+    this.time.delayedCall(1200, () => this._playAITurn());
+  }
+
+  _playAITurn() {
+    if (this.gameOver) return;
+    const freq = "EAOSRNIDLCTUMPBGVYQHFZJNXKW"; // Frecuencia de letras
+    let chosen = null;
+    
+    // Filtrar disponibles
+    const avail = freq.split('').filter(l => this.keys[l] && !this.keys[l].used);
+    if (avail.length > 0) {
+      if (Math.random() > 0.3) chosen = avail[0]; // 70% elige la mejor letra
+      else chosen = avail[Phaser.Math.Between(0, Math.min(4, avail.length - 1))];
+    }
+    
+    if (chosen) {
+      this._handleGuess(chosen, false);
     }
   }
 
@@ -622,13 +687,13 @@ export default class GameScene extends Phaser.Scene {
 
     this.oTitle = this.add.text(0, -55, won ? this.ui.youWin : this.ui.youLose, {
       fontSize: '36px', fontFamily: '"Orbitron"',
-      color: won ? '#2E7D32' : '#C62828', fontStyle: 'bold',
-      stroke: '#FFFFFF', strokeThickness: 5,
+      color: won ? '#10B981' : '#EF4444', fontStyle: 'bold',
+      stroke: '#FFFFFF', strokeThickness: 4,
     }).setOrigin(0.5).setScale(0);
 
     this.oSub = this.add.text(0, 14, `${won ? this.ui.wordWas : this.ui.wordWasLabel}\n${this.secret}`, {
       fontSize: '22px', fontFamily: '"Exo 2"',
-      color: won ? '#1A237E' : '#333', align: 'center', fontStyle: 'bold',
+      color: '#1E293B', align: 'center', fontStyle: 'bold',
     }).setOrigin(0.5).setAlpha(0);
 
     this.oHint = this.add.text(0, 76, this.ui.pressR, {
@@ -664,20 +729,11 @@ export default class GameScene extends Phaser.Scene {
 
   _drawOverlayBg(W, H) {
     this.overlayBg.clear();
-    this.overlayBg.fillStyle(0x000000, 0.68);
+    this.overlayBg.fillStyle(0x4FACFE, 0.4); // Light blue tint
     this.overlayBg.fillRect(-W/2, -H/2, W, H);
 
     this.overlayPanel.clear();
-    // Card shadow
-    this.overlayPanel.fillStyle(0x000000, 0.15); this.overlayPanel.fillRoundedRect(-164, -118, 328, 236, 22);
-    // White card base
-    this.overlayPanel.fillStyle(0xFFFFFF, 1);    this.overlayPanel.fillRoundedRect(-160, -120, 320, 240, 20);
-    // Top colored header strip (height 40 ensures radius 20 renders perfectly without sharp artifacts)
-    this.overlayPanel.fillStyle(0x1A237E, 1);    this.overlayPanel.fillRoundedRect(-160, -120, 320, 40, 20);
-    // Mask the bottom 24px of the blue strip to leave exactly a 16px header
-    this.overlayPanel.fillStyle(0xFFFFFF, 1);    this.overlayPanel.fillRect(-160, -104, 320, 24);
-    // Border
-    this.overlayPanel.lineStyle(2, 0xE0E0E0, 1); this.overlayPanel.strokeRoundedRect(-160, -120, 320, 240, 20);
+    drawGlassPanel(this.overlayPanel, -160, -120, 320, 240, 20, 0.95);
   }
 
   _spawnConfetti() {
